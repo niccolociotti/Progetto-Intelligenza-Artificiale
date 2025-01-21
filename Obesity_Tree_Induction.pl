@@ -1,9 +1,15 @@
 % programma per apprendere inducendo Alberi di Decisione testandone
 % l' efficacia
 
-:- ensure_loaded('/Users/niccolociotti/Desktop/IA/obesity_attributi.pl').
-:- ensure_loaded('/Users/niccolociotti/Desktop/IA/obesity_training2.pl').
-:- ensure_loaded('/Users/niccolociotti/Desktop/IA/obesity_test2.pl').
+%:- working_directory(_, '/users/tiasb/Desktop/Progetto-Intelligenza-Artificiale').
+
+%:- ensure_loaded('obesity_attributi.pl').
+%:- ensure_loaded('obesity_training.pl').
+%:- ensure_loaded('obesity_test.pl').
+
+:- ensure_loaded('/users/tiasb/Desktop/Progetto-Intelligenza-Artificiale/obesity_attributi.pl').
+:- ensure_loaded('/users/tiasb/Desktop/Progetto-Intelligenza-Artificiale/obesity_training.pl').
+:- ensure_loaded('/users/tiasb/Desktop/Progetto-Intelligenza-Artificiale/obesity_test.pl').
 
 :- dynamic alb/1.
 
@@ -36,6 +42,11 @@ induce_albero( Attributi, Esempi, t(Attributo,SAlberi) ) :-	 % (3)
 	induce_alberi( Attributo, Valori, Rimanenti, Esempi, SAlberi).
 induce_albero( _, Esempi, l(Classi)) :-                          % finiti gli attributi utili (KO!!)
 	findall( Classe, member(e(Classe,_),Esempi), Classi).
+
+
+% Caso finale: nessun attributo rimanente, si restituisce la lista delle classi
+induce_albero(_, Esempi, l(Classi)) :-
+    findall(Classe, member(e(Classe,_), Esempi), Classi).
 
 % sceglie_attributo( +Attributi, +Esempi, -MigliorAttributo):
 % seleziona l'Attributo che meglio discrimina le classi; si basa sul
@@ -89,14 +100,30 @@ somma_quadrati([P|Ps],PartS,S)  :-
 	NewPartS is PartS + P*P,
 	somma_quadrati(Ps,NewPartS,S).
 
-% induce_alberi(Attributi, Valori, AttRimasti, Esempi, SAlberi):
+%(Attributo, Valori, Rimanenti, Esempi, SAlberi).
 % induce decisioni SAlberi per sottoinsiemi di Esempi secondo i Valori
 % degli Attributi
-induce_alberi(_,[],_,_,[]).     % nessun valore, nessun sottoalbero
-induce_alberi(Att,[Val1|Valori],AttRimasti,Esempi,[Val1:Alb1|Alberi])  :-
-	attval_subset(Att=Val1,Esempi,SottoinsiemeEsempi),
-	induce_albero(AttRimasti,SottoinsiemeEsempi,Alb1),
-	induce_alberi(Att,Valori,AttRimasti,Esempi,Alberi).
+%induce_alberi(_,[],[],_,[]).     % nessun valore, nessun sottoalbero
+%induce_alberi(Att,[Val1|Valori],AttRimasti,Esempi,[Val1:Alb1|Alberi])  :-
+%	attval_subset(Att=Val1,Esempi,SottoinsiemeEsempi),
+%	induce_albero(AttRimasti,SottoinsiemeEsempi,Alb1),
+%	induce_alberi(Att,Valori,AttRimasti,Esempi,Alberi).
+
+% Caso base: nessun valore, nessun sottoalbero
+induce_alberi(_, [], _, _, []) :- !.
+
+% Caso ricorsivo: per ogni valore di un attributo, genera un sottoalbero
+induce_alberi(Att, [Val1|Valori], AttRimasti, Esempi, [Val1:Alb1|Alberi]) :-
+    % Prendi il sottoinsieme degli esempi per cui l'attributo ha il valore Val1
+    attval_subset(Att=Val1, Esempi, SottoinsiemeEsempi),
+
+    % Induzione dell'albero per i sottoinsiemi di esempi relativi al valore Val1
+    induce_albero(AttRimasti, SottoinsiemeEsempi, Alb1),
+
+	% Chiamata ricorsiva per il prossimo valore dell'attributo
+	induce_alberi(Att, Valori, AttRimasti, Esempi, Alberi).
+    
+    
 
 % attval_subset( Attributo = Valore, Esempi, Subset):
 %   Subset è il sottoinsieme di Examples che soddisfa la condizione
@@ -154,37 +181,148 @@ classifica(Oggetto,Classe,t(Att,Valori)) :-
 
 
 stampa_matrice_di_confusione :-
-	alb(Albero),
+	%alb(Albero),
 	findall(Classe/Oggetto,s(Classe,Oggetto),TestSet),
 	length(TestSet,N),
-	valuta(Albero,TestSet,VN,0,VP,0,FN,0,FP,0,NC,0),
-	A is (VP + VN) / (N - NC), % Accuratezza
+	valuta(Albero,TestSet,VO,0,VSO,0,VN,0,VST,0,OSO,0,ON,0,OST,0,SOO,0,SN,0,SOST,0,NO,0,NSO,0,NST,0,STO,0,STSO,0,STN,0,NC,0),
+	A is (VO + VSO + VN + VST) / (N - NC), % Accuratezza
 	E is 1 - A,		   % Errore
 	write('Test effettuati :'),  writeln(N),
 	write('Test non classificati :'),  writeln(NC),
-	write('Veri Negativi  '), write(VN), write('   Falsi Positivi '), writeln(FP),
-	write('Falsi Negativi '), write(FN), write('   Veri Positivi  '), writeln(VP),
+	%write('Veri Negativi  '), write(VN), write('   Falsi Positivi '), writeln(FP),
+	%write('Falsi Negativi '), write(FN), write('   Veri Positivi  '), writeln(VP),
 	write('Accuratezza: '), writeln(A),
 	write('Errore: '), writeln(E).
 
-valuta(_,[],VN,VN,VP,VP,FN,FN,FP,FP,NC,NC).            % testset vuoto -> valutazioni finali
-valuta(Albero,[deceduto/Oggetto|Coda],VN,VNA,VP,VPA,FN,FNA,FP,FPA,NC,NCA) :-
-	classifica(Oggetto,deceduto,Albero), !,      % prevede correttamente non sopravvivenza
-	VNA1 is VNA + 1,
-	valuta(Albero,Coda,VN,VNA1,VP,VPA,FN,FNA,FP,FPA,NC,NCA).
-valuta(Albero,[sopravvissuto/Oggetto|Coda],VN,VNA,VP,VPA,FN,FNA,FP,FPA,NC,NCA) :-
-	classifica(Oggetto,sopravvissuto,Albero), !, % prevede correttamente sopravvivenza
-	VPA1 is VPA + 1,
-	valuta(Albero,Coda,VN,VNA,VP,VPA1,FN,FNA,FP,FPA,NC,NCA).
-valuta(Albero,[sopravvissuto/Oggetto|Coda],VN,VNA,VP,VPA,FN,FNA,FP,FPA,NC,NCA) :-
-	classifica(Oggetto,deceduto,Albero), !,      % prevede erroneamente non sopravvivenza
-	FNA1 is FNA + 1,
-	valuta(Albero,Coda,VN,VNA,VP,VPA,FN,FNA1,FP,FPA,NC,NCA).
-valuta(Albero,[deceduto/Oggetto|Coda],VN,VNA,VP,VPA,FN,FNA,FP,FPA,NC,NCA) :-
-	classifica(Oggetto,sopravvissuto,Albero), !, % prevede erroneamente sopravvivenza
-	FPA1 is FPA + 1,
-	valuta(Albero,Coda,VN,VNA,VP,VPA,FN,FNA,FP,FPA1,NC,NCA).
-valuta(Albero,[_/Oggetto|Coda],VN,VNA,VP,VPA,FN,FNA,FP,FPA,NC,NCA) :- % non classifica
-	classifica(Oggetto,nc,Albero), !, % non classificato
+valuta(_,[],VO,VO,VSO,VSO,VN,VN,VST,VST,OSO,OSO,ON,ON,OST,OST,SOO,SOO,SN,SN,SOST,SOST,NO,NO,NSO,NSO,NST,NST,STO,STO,STSO,STSO,STN,STN,NC,NC).
+% testset vuoto -> valutazioni finali
+
+% Le corrispettive versioni per l'accuratezza hanno  un -A finale
+
+% Vero obeso      			  VO
+% Vero sovrappeso 			  VSO
+% Vero normopeso  			  VN
+% Vero sottopeso  			  VST
+
+% Obeso come sovrappeso 	  OSO
+% Obeso come normopeso  	  ON
+% Obeso come sottopeso  	  OST
+
+% Sovrappeso come obeso       SOO
+% Sovrappeso come normopeso	  SN
+% Sovrappeso come sottopeso   SOST
+
+% Normopeso come obeso		  NO
+% Normopeso come sovrappeso	  NSO
+% Normopeso come sottopeso	  NST
+
+% Sottopeso come obeso		  STO
+% Sottopeso come sovrappeso   STSO
+% Sottopeso come normopeso    STN
+
+% Non classificato 			  NC
+
+% Corretta classificazione "obeso"
+valuta(Albero, [obeso/Oggetto | Coda], VO,VOA,VSO,VSOA,VN,VNOA,VST,VSTA,OSO,OSOA,ON,ONA,OST,OSTA,SOO,SOOA,SN,SNA,SOST,SOSTA,NO,NOA,NSO,NSOA,NST,NSTA,STO,STOA,STSO,STSOA,STN,STNA,NC,NCA) :-
+    classifica(Oggetto, obeso, Albero), !,
+    VOA1 is VOA + 1,
+    valuta(Albero, Coda,VO,VOA1,VSO,VSOA,VN,VNOA,VST,VSTA,OSO,OSOA,ON,ONA,OST,OSTA,SOO,SOOA,SN,SNA,SOST,SOSTA,NO,NOA,NSO,NSOA,NST,NSTA,STO,STOA,STSO,STSOA,STN,STNA,NC,NCA).
+
+
+% Corretta classificazione "sovrappeso"
+valuta(Albero, [sovrappeso/Oggetto | Coda], VO,VOA,VSO,VSOA,VN,VNOA,VST,VSTA,OSO,OSOA,ON,ONA,OST,OSTA,SOO,SOOA,SN,SNA,SOST,SOSTA,NO,NOA,NSO,NSOA,NST,NSTA,STO,STOA,STSO,STSOA,STN,STNA,NC,NCA) :-
+	classifica(Oggetto, sovrappeso, Albero), !,
+	VSOA1 is VSOA + 1,
+	valuta(Albero, Coda,VO,VOA,VSO,VSOA1,VN,VNOA,VST,VSTA,OSO,OSOA,ON,ONA,OST,OSTA,SOO,SOOA,SN,SNA,SOST,SOSTA,NO,NOA,NSO,NSOA,NST,NSTA,STO,STOA,STSO,STSOA,STN,STNA,NC,NCA).
+
+% Corretta classificazione "normopeso"
+valuta(Albero, [normopeso/Oggetto | Coda], VO,VOA,VSO,VSOA,VN,VNOA,VST,VSTA,OSO,OSOA,ON,ONA,OST,OSTA,SOO,SOOA,SN,SNA,SOST,SOSTA,NO,NOA,NSO,NSOA,NST,NSTA,STO,STOA,STSO,STSOA,STN,STNA,NC,NCA) :-
+	classifica(Oggetto, normopeso, Albero), !,
+	VNOA1 is VNOA + 1,
+	valuta(Albero, Coda,VO,VOA,VSO,VSOA,VN,VNOA1,VST,VSTA,OSO,OSOA,ON,ONA,OST,OSTA,SOO,SOOA,SN,SNA,SOST,SOSTA,NO,NOA,NSO,NSOA,NST,NSTA,STO,STOA,STSO,STSOA,STN,STNA,NC,NCA).
+
+% Corretta classificazione "sottopeso"
+valuta(Albero, [sottopeso/Oggetto | Coda], VO,VOA,VSO,VSOA,VN,VNOA,VST,VSTA,OSO,OSOA,ON,ONA,OST,OSTA,SOO,SOOA,SN,SNA,SOST,SOSTA,NO,NOA,NSO,NSOA,NST,NSTA,STO,STOA,STSO,STSOA,STN,STNA,NC,NCA) :-
+	classifica(Oggetto, sottopeso, Albero), !,
+	VSTA1 is VSTA + 1,
+	valuta(Albero, Coda,VO,VOA,VSO,VSOA,VN,VNOA,VST,VSTA1,OSO,OSOA,ON,ONA,OST,OSTA,SOO,SOOA,SN,SNA,SOST,SOSTA,NO,NOA,NSO,NSOA,NST,NSTA,STO,STOA,STSO,STSOA,STN,STNA,NC,NCA).
+
+% Obeso classificato come sovrappeso
+valuta(Albero, [obeso/Oggetto | Coda], VO,VOA,VSO,VSOA,VN,VNOA,VST,VSTA,OSO,OSOA,ON,ONA,OST,OSTA,SOO,SOOA,SN,SNA,SOST,SOSTA,NO,NOA,NSO,NSOA,NST,NSTA,STO,STOA,STSO,STSOA,STN,STNA,NC,NCA) :-
+	classifica(Oggetto, sovrappeso, Albero), !,
+	OSOA1 is OSOA + 1,
+	valuta(Albero, Coda,VO,VOA,VSO,VSOA,VN,VNOA,VST,VSTA,OSO,OSOA1,ON,ONA,OST,OSTA,SOO,SOOA,SN,SNA,SOST,SOSTA,NO,NOA,NSO,NSOA,NST,NSTA,STO,STOA,STSO,STSOA,STN,STNA,NC,NCA).
+
+% Obeso classificato come normopeso
+valuta(Albero, [obeso/Oggetto | Coda], VO,VOA,VSO,VSOA,VN,VNOA,VST,VSTA,OSO,OSOA,ON,ONA,OST,OSTA,SOO,SOOA,SN,SNA,SOST,SOSTA,NO,NOA,NSO,NSOA,NST,NSTA,STO,STOA,STSO,STSOA,STN,STNA,NC,NCA) :-
+	classifica(Oggetto, normopeso, Albero), !,
+	ONA1 is ONA + 1,
+	valuta(Albero, Coda,VO,VOA,VSO,VSOA,VN,VNOA,VST,VSTA,OSO,OSOA,ON,ONA1,OST,OSTA,SOO,SOOA,SN,SNA,SOST,SOSTA,NO,NOA,NSO,NSOA,NST,NSTA,STO,STOA,STSO,STSOA,STN,STNA,NC,NCA).
+
+% Obeso classificato come sottopeso
+valuta(Albero, [obeso/Oggetto | Coda], VO,VOA,VSO,VSOA,VN,VNOA,VST,VSTA,OSO,OSOA,ON,ONA,OST,OSTA,SOO,SOOA,SN,SNA,SOST,SOSTA,NO,NOA,NSO,NSOA,NST,NSTA,STO,STOA,STSO,STSOA,STN,STNA,NC,NCA) :-
+	classifica(Oggetto, sottopeso, Albero), !,
+	OSTA1 is OSTA + 1,
+	valuta(Albero, Coda,VO,VOA,VSO,VSOA,VN,VNOA,VST,VSTA,OSO,OSOA,ON,ONA,OST,OSTA1,SOO,SOOA,SN,SNA,SOST,SOSTA,NO,NOA,NSO,NSOA,NST,NSTA,STO,STOA,STSO,STSOA,STN,STNA,NC,NCA).
+
+% Sovrappeso classificato come obeso
+valuta(Albero, [sovrappeso/Oggetto | Coda], VO,VOA,VSO,VSOA,VN,VNOA,VST,VSTA,OSO,OSOA,ON,ONA,OST,OSTA,SOO,SOOA,SN,SNA,SOST,SOSTA,NO,NOA,NSO,NSOA,NST,NSTA,STO,STOA,STSO,STSOA,STN,STNA,NC,NCA) :-
+	classifica(Oggetto, obeso, Albero), !,
+	SOOA1 is SOOA + 1,
+	valuta(Albero, Coda,VO,VOA,VSO,VSOA,VN,VNOA,VST,VSTA,OSO,OSOA,ON,ONA,OST,OSTA,SOO,SOOA1,SN,SNA,SOST,SOSTA,NO,NOA,NSO,NSOA,NST,NSTA,STO,STOA,STSO,STSOA,STN,STNA,NC,NCA).
+
+% Sovrappeso classificato come normopeso
+valuta(Albero, [sovrappeso/Oggetto | Coda], VO,VOA,VSO,VSOA,VN,VNOA,VST,VSTA,OSO,OSOA,ON,ONA,OST,OSTA,SOO,SOOA,SN,SNA,SOST,SOSTA,NO,NOA,NSO,NSOA,NST,NSTA,STO,STOA,STSO,STSOA,STN,STNA,NC,NCA) :-
+	classifica(Oggetto, normopeso, Albero), !,
+	SNA1 is SNA + 1,
+	valuta(Albero, Coda,VO,VOA,VSO,VSOA,VN,VNOA,VST,VSTA,OSO,OSOA,ON,ONA,OST,OSTA,SOO,SOOA,SN,SNA1,SOST,SOSTA,NO,NOA,NSO,NSOA,NST,NSTA,STO,STOA,STSO,STSOA,STN,STNA,NC,NCA).
+
+% Sovrappeso classificato come sottopeso
+valuta(Albero, [sovrappeso/Oggetto | Coda], VO,VOA,VSO,VSOA,VN,VNOA,VST,VSTA,OSO,OSOA,ON,ONA,OST,OSTA,SOO,SOOA,SN,SNA,SOST,SOSTA,NO,NOA,NSO,NSOA,NST,NSTA,STO,STOA,STSO,STSOA,STN,STNA,NC,NCA) :-
+	classifica(Oggetto, sottopeso, Albero), !,
+	SOSTA1 is SOSTA + 1,
+	valuta(Albero, Coda,VO,VOA,VSO,VSOA,VN,VNOA,VST,VSTA,OSO,OSOA,ON,ONA,OST,OSTA,SOO,SOOA,SN,SNA,SOST,SOSTA1,NO,NOA,NSO,NSOA,NST,NSTA,STO,STOA,STSO,STSOA,STN,STNA,NC,NCA).
+
+% Normopeso classificato come obeso
+valuta(Albero, [normopeso/Oggetto | Coda], VO,VOA,VSO,VSOA,VN,VNOA,VST,VSTA,OSO,OSOA,ON,ONA,OST,OSTA,SOO,SOOA,SN,SNA,SOST,SOSTA,NO,NOA,NSO,NSOA,NST,NSTA,STO,STOA,STSO,STSOA,STN,STNA,NC,NCA) :-
+	classifica(Oggetto, obeso, Albero), !,
+	NOA1 is NOA + 1,
+	valuta(Albero, Coda,VO,VOA,VSO,VSOA,VN,VNOA,VST,VSTA,OSO,OSOA,ON,ONA,OST,OSTA,SOO,SOOA,SN,SNA,SOST,SOSTA,NO,NOA1,NSO,NSOA,NST,NSTA,STO,STOA,STSO,STSOA,STN,STNA,NC,NCA).
+
+% Normopeso classificato come sovrappeso
+valuta(Albero, [normopeso/Oggetto | Coda], VO,VOA,VSO,VSOA,VN,VNOA,VST,VSTA,OSO,OSOA,ON,ONA,OST,OSTA,SOO,SOOA,SN,SNA,SOST,SOSTA,NO,NOA,NSO,NSOA,NST,NSTA,STO,STOA,STSO,STSOA,STN,STNA,NC,NCA) :-
+	classifica(Oggetto, sovrappeso, Albero), !,
+	NSOA1 is NSOA + 1,
+	valuta(Albero, Coda,VO,VOA,VSO,VSOA,VN,VNOA,VST,VSTA,OSO,OSOA,ON,ONA,OST,OSTA,SOO,SOOA,SN,SNA,SOST,SOSTA,NO,NOA,NSO,NSOA1,NST,NSTA,STO,STOA,STSO,STSOA,STN,STNA,NC,NCA).
+
+% Normopeso classificato come sottopeso
+valuta(Albero, [normopeso/Oggetto | Coda], VO,VOA,VSO,VSOA,VN,VNOA,VST,VSTA,OSO,OSOA,ON,ONA,OST,OSTA,SOO,SOOA,SN,SNA,SOST,SOSTA,NO,NOA,NSO,NSOA,NST,NSTA,STO,STOA,STSO,STSOA,STN,STNA,NC,NCA) :-
+	classifica(Oggetto, sottopeso, Albero), !,
+	NSTA1 is NSTA + 1,
+	valuta(Albero, Coda,VO,VOA,VSO,VSOA,VN,VNOA,VST,VSTA,OSO,OSOA,ON,ONA,OST,OSTA,SOO,SOOA,SN,SNA,SOST,SOSTA,NO,NOA,NSO,NSOA,NST,NSTA1,STO,STOA,STSO,STSOA,STN,STNA,NC,NCA).
+
+% Sottopeso classificato come obeso
+valuta(Albero, [sottopeso/Oggetto | Coda], VO,VOA,VSO,VSOA,VN,VNOA,VST,VSTA,OSO,OSOA,ON,ONA,OST,OSTA,SOO,SOOA,SN,SNA,SOST,SOSTA,NO,NOA,NSO,NSOA,NST,NSTA,STO,STOA,STSO,STSOA,STN,STNA,NC,NCA) :-
+	classifica(Oggetto, obeso, Albero), !,
+	STOA1 is STOA + 1,
+	valuta(Albero, Coda,VO,VOA,VSO,VSOA,VN,VNOA,VST,VSTA,OSO,OSOA,ON,ONA,OST,OSTA,SOO,SOOA,SN,SNA,SOST,SOSTA,NO,NOA,NSO,NSOA,NST,NSTA,STO,STOA1,STSO,STSOA,STN,STNA,NC,NCA).
+
+% Sottopeso classificato come sovrappeso
+valuta(Albero, [sottopeso/Oggetto | Coda], VO,VOA,VSO,VSOA,VN,VNOA,VST,VSTA,OSO,OSOA,ON,ONA,OST,OSTA,SOO,SOOA,SN,SNA,SOST,SOSTA,NO,NOA,NSO,NSOA,NST,NSTA,STO,STOA,STSO,STSOA,STN,STNA,NC,NCA) :-
+	classifica(Oggetto, sovrappeso, Albero), !,
+	STSOA1 is STSOA + 1,
+	valuta(Albero, Coda,VO,VOA,VSO,VSOA,VN,VNOA,VST,VSTA,OSO,OSOA,ON,ONA,OST,OSTA,SOO,SOOA,SN,SNA,SOST,SOSTA,NO,NOA,NSO,NSOA,NST,NSTA,STO,STOA,STSO,STSOA1,STN,STNA,NC,NCA).
+
+% Sottopeso classificato come normopeso
+valuta(Albero, [sottopeso/Oggetto | Coda], VO,VOA,VSO,VSOA,VN,VNOA,VST,VSTA,OSO,OSOA,ON,ONA,OST,OSTA,SOO,SOOA,SN,SNA,SOST,SOSTA,NO,NOA,NSO,NSOA,NST,NSTA,STO,STOA,STSO,STSOA,STN,STNA,NC,NCA) :-
+	classifica(Oggetto, normopeso, Albero), !,
+	STNA1 is STNA + 1,
+	valuta(Albero, Coda,VO,VOA,VSO,VSOA,VN,VNOA,VST,VSTA,OSO,OSOA,ON,ONA,OST,OSTA,SOO,SOOA,SN,SNA,SOST,SOSTA,NO,NOA,NSO,NSOA,NST,NSTA,STO,STOA,STSO,STSOA,STN,STNA1,NC,NCA).
+
+% Oggetto non classificato
+valuta(Albero, [_/Oggetto | Coda], VO,VOA,VSO,VSOA,VN,VNOA,VST,VSTA,OSO,OSOA,ON,ONA,OST,OSTA,SOO,SOOA,SN,SNA,SOST,SOSTA,NO,NOA,NSO,NSOA,NST,NSTA,STO,STOA,STSO,STSOA,STN,STNA,NC,NCA) :-
+	classifica(Oggetto, nc , Albero), !,
 	NCA1 is NCA + 1,
-	valuta(Albero,Coda,VN,VNA,VP,VPA,FN,FNA,FP,FPA,NC,NCA1).
+	valuta(Albero, Coda,VO,VOA,VSO,VSOA,VN,VNOA,VST,VSTA,OSO,OSOA,ON,ONA,OST,OSTA,SOO,SOOA,SN,SNA,SOST,SOSTA,NO,NOA,NSO,NSOA,NST,NSTA,STO,STOA,STSO,STSOA,STN,STNA,NC,NCA1).
+
+% ================================================================================
