@@ -15,20 +15,8 @@ induce_albero(Albero, Algoritmo) :-
         findall( Att,a(Att,_), Attributi),
         induce_albero( Attributi, Esempi, Algoritmo, Albero),
 	mostra( Albero ),
-	scrivi_albero_su_file('/users/tiasb/Desktop/Progetto-Intelligenza-Artificiale/albero.txt', Albero),
-	assert(alb(Albero)).
-
-% Predicate to write the tree to a file
-scrivi_albero_su_file(FileName, Albero) :-
-    open(FileName, write, Stream),
-    write(Stream, Albero),
-	write(Stream, '.'),
-    close(Stream).
-
-carica_albero_da_file(FileName, Albero) :-
-	open(FileName, read, Stream),  	
-	read(Stream, Albero),    		
-	close(Stream).            		
+	scrivi_albero_su_file('/users/tiasb/Desktop/Progetto-Intelligenza-Artificiale/albero.txt', Albero,Algoritmo),
+	assert(alb(Albero)).        		
 	
 
 % induce_albero( +Attributi, +Esempi, -Albero):
@@ -83,9 +71,9 @@ scegli_attributo_gini( Attributi, Esempi, MigliorAttributo )  :-
 % scegli_attributo_C4_5( +Attributi, +Esempi, -MigliorAttributo):
 % Sceglie l'attributo che massimizza il guadagno informativo
 scegli_attributo_C4_5(Attributi, Esempi, MigliorAttributo) :-
-    setof(Gain/A, (member(A, Attributi), guadagno_informativo(Esempi, A, Gain)), [MaxGain/MigliorAttributo|_]),
+    setof(Gain/A, (member(A, Attributi), guadagno_informativo(Esempi, A, Gain)), [MaxGain/MigliorAttributo|_]).
     % L'attributo con il guadagno informativo massimo è scelto
-    writeln(MigliorAttributo).
+    %writeln(MigliorAttributo).
 
 % guadagno_informativo(+Esempi, +Attributo, -Gain):
 % Calcola il guadagno informativo di un attributo
@@ -238,13 +226,13 @@ mostratutto([V:T|C],I) :-
 % presuppone sia stata effettuata l'induzione dell'Albero di Decisione
 
 classifica(Oggetto, nc ,t(Att,Valori)) :- % dato t(+Att,+Valori), Oggetto è della Classe
-	writeln(Oggetto),  % Aggiungi questa riga per vedere l'oggetto
+	%writeln(Oggetto),  % Aggiungi questa riga per vedere l'oggetto
 	member(Att=Val,Oggetto),  % se Att=Val è elemento della lista Oggetto
         member(Val:null,Valori). % e Val:null è in Valori
 
 
 classifica(Oggetto,Classe,t(Att,Valori)) :- % dato t(+Att,+Valori), Oggetto è della Classe
-	writeln(Oggetto), % Aggiungi questa riga per vedere l'oggetto
+	%writeln(Oggetto), % Aggiungi questa riga per vedere l'oggetto
 	member(Att=Val,Oggetto),  % se Att=Val è elemento della lista Oggetto
     	member(Val:l(Classe),Valori). % e Val:l(Classe) è in Valori
 	
@@ -257,8 +245,8 @@ classifica(Oggetto,Classe,t(Att,Valori)) :-
 
 
 stampa_matrice_di_confusione :-
-	alb(Albero),
-	carica_albero_da_file('/users/tiasb/Desktop/Progetto-Intelligenza-Artificiale/albero.txt', Albero),	
+	carica_albero_da_file('/users/tiasb/Desktop/Progetto-Intelligenza-Artificiale/albero.txt', Albero, Algoritmo),
+	alb(Albero),	
 	findall(Classe/Oggetto,s(Classe,Oggetto),TestSet),
 	%write(TestSet),
 	length(TestSet,N),
@@ -287,7 +275,32 @@ stampa_matrice_di_confusione :-
 	write('Test non classificati :'),  writeln(NC),
 
 	write('Accuratezza: '), writeln(A),
-	write('Errore: '), writeln(E).
+	write('Errore: '), writeln(E),
+
+	Valori = [VO, VSO, VN, VST, OSO, ON, OST, SOO, SN, SOST, NO, NSO, NST, STO, STSO, STN, Algoritmo],
+    % Costruisci il comando da passare a Python
+    atomics_to_string(Valori, ' ', Args),
+    % Esegui il comando Python passando i valori come argomenti
+    string_concat('py matrix.py ', Args, Command),
+    shell(Command).
+
+% Predicate to write the tree to a file
+scrivi_albero_su_file(FileName, Albero, Algoritmo) :-
+    open(FileName, write, Stream),
+    write(Stream, Albero),
+	write(Stream, '.'),
+	nl(Stream),
+	write(Stream, '"'),
+	write(Stream, Algoritmo),
+	write(Stream, '".'),
+    close(Stream).
+
+carica_albero_da_file(FileName, Albero, Algoritmo) :-
+	open(FileName, read, Stream),  	
+	read(Stream, Albero),	
+	read(Stream, Algoritmo),
+	close(Stream).    
+
 
 valuta(_,[],VO,VO,VSO,VSO,VN,VN,VST,VST,OSO,OSO,ON,ON,OST,OST,SOO,SOO,SN,SN,SOST,SOST,NO,NO,NSO,NSO,NST,NST,STO,STO,STSO,STSO,STN,STN,NC,NC).
 % testset vuoto -> valutazioni finali
