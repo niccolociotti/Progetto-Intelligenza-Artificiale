@@ -1,5 +1,5 @@
 a(gender,['Female','Male']).
-a(age,['Youth', 'Adult', 'Senior'].
+a(age,['Youth', 'Adult', 'Senior']).
 a(height,['Average','Short','Tall']).
 a(weight,['Heavy','Light','Normal']).
 a(family,[no,yes]).

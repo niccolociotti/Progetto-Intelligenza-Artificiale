@@ -631,3 +631,5 @@ s(sovrappeso,[gender = 'Female', age = 'Youth', height = 'Average', weight = 'No
 s(obeso,[gender = 'Female', age = 'Youth', height = 'Average', weight = 'Heavy', family = 'yes', favc = 'yes', ncp = 3, smoke = 'no', water = 2, activity = 0, alcohol = 'Sometimes', mtrans = 'Public_Transportation']).
 s(normopeso,[gender = 'Female', age = 'Youth', height = 'Average', weight = 'Light', family = 'no', favc = 'yes', ncp = 1, smoke = 'no', water = 2, activity = 2, alcohol = 'Sometimes', mtrans = 'Public_Transportation']).
 s(obeso,[gender = 'Male', age = 'Youth', height = 'Tall', weight = 'Heavy', family = 'yes', favc = 'yes', ncp = 3, smoke = 'no', water = 3, activity = 2, alcohol = 'no', mtrans = 'Public_Transportation']).
+s(e,[gender = 'Male', age = 'Youth', height = 'Tall', weight = 'Heavy', family = 'yes', favc = 'yes', ncp = 3, smoke = 'no', water = 3, activity = 2, alcohol = 'no', mtrans = 'Public_Transportation']).
+s(obeso,[gender = 'Female', age = 'Youth', height = 'Average', weight = 'Light', family = 'no', favc = 'no', ncp = 3, smoke = 'no', water = 2, activity = 2, alcohol = 'Sometimes', mtrans = 'Public_Transportation']).

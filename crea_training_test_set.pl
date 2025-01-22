@@ -1,4 +1,4 @@
-:- ensure_loaded('/Users/niccolociotti/Desktop/IA/Obesity-prediction-elaborato.pl').
+:- ensure_loaded('/users/tiasb/Desktop/Progetto-Intelligenza-Artificiale/Obesity-prediction-elaborato.pl').
 
 % Predicato che divide i dati in training (70%) e test (30%)
 create_datasets :-
@@ -17,11 +17,11 @@ create_datasets :-
     length(TrainingData, TrainingSize),
     append(TrainingData, TestData, ShuffledData),
     % Scriviamo i dati nel file training
-    tell('obesity_training.pl'),
+    tell('/users/tiasb/Desktop/Progetto-Intelligenza-Artificiale/obesity_training.pl'),
     write_data(TrainingData, e),
     told,
     % Scriviamo i dati nel file test
-    tell('obesity_test.pl'),
+    tell('/users/tiasb/Desktop/Progetto-Intelligenza-Artificiale/obesity_test.pl'),
     write_data(TestData, s),
     told.
 
@@ -47,8 +47,8 @@ write_entry(Gender, Age, Height, Weight, Family, FAVC, NCP, Smoke, Water, Activi
 % Predicati per scrivere in formato per training (e/17) e test (s/17)
 e(Label, Gender, Age, Height, Weight, Family, FAVC, NCP, Smoke, Water, Activity, Alcohol, Mtrans) :-
     write('e('), write(Label), write(',['),
-    write('sex = '), writeq(Gender), write(', '),
-    write('age  = '), writeq(Age), write(', '),
+    write('gender = '), writeq(Gender), write(', '),
+    write('age = '), writeq(Age), write(', '),
     write('height = '), writeq(Height), write(', '),
     write('weight = '), writeq(Weight), write(', '),
     write('family = '), writeq(Family), write(', '),
@@ -56,14 +56,14 @@ e(Label, Gender, Age, Height, Weight, Family, FAVC, NCP, Smoke, Water, Activity,
     write('ncp = '), writeq(NCP), write(', '),
     write('smoke = '), writeq(Smoke), write(', '),
     write('water = '), writeq(Water), write(', '),
-    write(activity = '), writeq(Activity), write(', '),
+    write('activity = '), writeq(Activity), write(', '),
     write('alcohol = '), writeq(Alcohol), write(', '),
     write('mtrans = '), writeq(Mtrans), writeln(']).').
 
 s(Label, Gender, Age, Height, Weight, Family, FAVC, NCP, Smoke, Water, Activity, Alcohol, Mtrans) :-
     write('s('), write(Label), write(',['),
-    write('sex = '), writeq(Gender), write(', '),
-    write('age  = '), writeq(Age), write(', '),
+    write('gender = '), writeq(Gender), write(', '),
+    write('age = '), writeq(Age), write(', '),
     write('height = '), writeq(Height), write(', '),
     write('weight = '), writeq(Weight), write(', '),
     write('family = '), writeq(Family), write(', '),
