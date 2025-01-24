@@ -23,7 +23,7 @@ def print_confusion_matrix(values, algoritmo):
     sns.heatmap(cm, annot=True, fmt='d', cmap='Blues', xticklabels=['Obeso', 'Sovrappeso', 'Normopeso', 'Sottopeso'], yticklabels=['Obeso', 'Sovrappeso', 'Normopeso', 'Sottopeso'])
     plt.xlabel('Predizioni')
     plt.ylabel('Etichette vere')
-    plt.title('Matrice di confusione con algoritmo: ' + "C4.5" if algoritmo == "C45" else str(algoritmo))
+    plt.title('Matrice di confusione con algoritmo: C4.5' if algoritmo == "C45" else 'Matrice di confusione con algoritmo: Gini')
     
     # Salva la figura come PNG
     filename = os.path.join(os.getcwd(), 'confusion_matrix_'+ str(algoritmo)+'.png')
